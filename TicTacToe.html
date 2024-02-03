@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe</title>
+</head>
+<body>
+    <h2>Tic Tac Toe</h2>
+    <div class="gameboard" id="board"></div>
+    <p id="info"></p>
+    <script
+    src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"
+    ></script>
+
+    
+<style>
+    *,*::after,*::before{
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    :root{
+        --hue:10;
+        --bkg:var(--hue) 40% 98%;
+        --text:var(--hue) 80% 20%;
+        --accent:var(--hue) 60% 50%;
+    }
+    body{
+        font-family: 'Times New Roman', Times, serif;
+        display: grid;
+        place-items: center;
+        place-content: center;
+        gap: 2rem;
+        padding: 2rem;
+        min-height: 100vh;
+        background-color: hsl(var(--bkg));
+        color: hsl(var(--text));
+    }
+    h2{
+        font-size: 3rem;
+    }
+    p{
+        font-size: 1.5rem;
+        font-weight: bold;
+        background-color: hsl(var(--accent));
+        color: hsl(var(--bkg));
+        padding: .5rem 1.5rem;
+        border-radius: 100vmax;
+    }
+    .gameboard{
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap:.5rem;
+        width: 600px;
+        max-width: 90vw;
+        aspect-ratio: 1/1;
+    }
+    .tile{
+        border: 2px solid hsl(var(--text));
+        background-color: hsl(var(--bkg));
+        border-radius: .5rem;
+        cursor: pointer;
+        display: grid;
+        place-items:center;
+        font-weight: bold;
+        color:hsl(var(--hue) 60% 50%);
+        font-size: clamp(2rem, calc(10vw + 1rem), 10rem);
+        aspect-ratio: 1/1;
+    }
+    .tile:focus{
+        border-color: hsl(var(--hue)60% 50%);
+        outline: 3px solid hsl(var(--hue)60% 50%);
+    }
+    .tile[data-value]::before{
+        content:attr(data-hover);
+        opacity: .5;
+    }
+    .tile[data-value]::before{
+        content:attr(data-value);
+        opacity: 1;
+    }
+</style>
+<script>
+    const gameBoard = document.querySelector('#board')
+    const info = document.querySelector('#info')
+    let turn
+    const winningCombos = [
+        [0,1,2],
+        [3,4,5],
+        [6,7,8],
+        [0,3,6],
+        [1,4,7],
+        [2,5,8],
+        [0,4,8],
+        [2,4,6]
+    ]
+
+    //make gameBoard
+    function createGameBoard(){
+        const emptyTiles = " ".repeat(9).split("")
+        //console.log("~createGameBoard~emptyTiles:",emptyTiles)
+        const tileGrid = emptyTiles.map((t) => `<button class="tile"></button>`).join("")
+        gameBoard.innerHTML = tileGrid
+        turn = "X"
+        info.textContent = `${turn}'s turn`
+        gameBoard.addEventListener("click", handleGameboardClick)
+        const allTiles = gameBoard.querySelectorAll(".tile")
+        allTiles.forEach((t)=>{
+            t.addEventListener("mouseEnter",handleMouseEnter)
+            t.addEventListener("mouseLeave",handleMouseLeave) 
+        })
+        gameBoard.removeAttribute("inert")
+    }
+    createGameBoard()
+    function updateTurn(){
+        turn = turn === "X" ? "O" : "X"
+        info.textContent = `${turn}'s turn`
+        document.documentElement.style.setProperty("--hue",turn === "X" ? 10:200)
+    }
+    function restartGame(){
+        let seconds = 3
+        const timer = setInterval(()=>{
+            info.textContent = `Restarting in ${seconds}...`
+            if (seconds < 0){
+                clearInterval(timer)
+                createGameBoard()
+            }
+            seconds--
+        },1000)
+    }
+    function showCongrats() {
+        info.textContent = `${turn} wins!`
+        gameBoard.removeEventListener("click",handleGameboardClick)
+        gameBoard.setAttribute("inert",true)
+        const jsConfetti = new JSConfetti()
+        jsConfetti.addConfetti()
+        setTimeout(restartGame,1000)
+    }
+    function checkScore(){
+        const allTiles = [...document.querySelectorAll(".tile")]
+        const tileValues = allTiles.map((t) => t.dataset.value)
+        //console.log("~ checkScore ~ tileValues: ",tileValues)
+        const isWinner = winningCombos.some((combo)=>{
+            const[a,b,c] = combo 
+            return(
+                tileValues[a] &&
+                tileValues[a] === tileValues[b] &&
+                tileValues[a] === tileValues[c] 
+            )
+        })
+        //console.log("~ isWinner ~ isWinner: ", isWinner)
+        if(isWinner) {
+            alert(`${turn} wins!`)
+            return showCongrats()
+            
+        }
+        updateTurn()  
+        
+    }
+    function handleMouseEnter(e) {
+        const valueExists = e.target.dataset.value
+        if(!valueExists){
+            e.target.dataset.hover = turn
+            e.target.style.setProperty("--hue",turn === "X" ? 10 : 200)
+        }
+    } 
+    function handleMouseLeave(e){
+        e.target.dataset.hover = ""
+    }
+    function handleGameboardClick(e){
+        const valueExists = e.target.dataset.value
+        //console.log( '~handleGameboardClick~ valueExists:',valueExists)
+        if(!valueExists) {
+            e.target.dataset.value = turn 
+            e.target.style.setProperty("--hue",turn === "X" ? 10:200)
+            checkScore()
+        }
+    }
+    
+
+    
+    //15:00
+</script>
+</body>
+</html>
